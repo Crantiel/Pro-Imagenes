@@ -174,6 +174,7 @@
             this.button4.TabIndex = 18;
             this.button4.Text = "Croma";
             this.button4.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.button11_Click); // CORRECTLY PLACED LINE
             // 
             // button3
             // 
