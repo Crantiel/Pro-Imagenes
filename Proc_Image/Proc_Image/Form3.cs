@@ -22,8 +22,8 @@ namespace Proc_Image
         private VideoFileReader videoReader;
         private VideoFileWriter videoWriter;
         private Bitmap currentFrame;
-        private List<Bitmap> originalFrames; // To store all frames of the original video
-        private List<Bitmap> processedFrames; // To store frames after filter application
+        private List<Bitmap> originalFrames;
+        private List<Bitmap> processedFrames;
         private System.Windows.Forms.Timer playbackTimer;
         private bool isPlaying = false;
         private bool isPaused = false;
@@ -31,6 +31,11 @@ namespace Proc_Image
         private double videoFrameRate = 0;
         private int videoWidth = 0;
         private int videoHeight = 0;
+
+        // Real-time preview members
+        private bool realTimePreviewEnabled = false;
+        private IFilter activeRealTimeFilter = null;
+        private CheckBox chkRealTimePreview;
 
         public Form3()
         {
@@ -42,7 +47,60 @@ namespace Proc_Image
             originalFrames = new List<Bitmap>();
             processedFrames = new List<Bitmap>();
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form3_FormClosing);
+
+            // Programmatically create and add the CheckBox
+            this.chkRealTimePreview = new System.Windows.Forms.CheckBox();
+            this.chkRealTimePreview.AutoSize = true;
+            this.chkRealTimePreview.Location = new System.Drawing.Point(903, 450); // Adjusted position
+            this.chkRealTimePreview.Name = "chkRealTimePreview";
+            this.chkRealTimePreview.Size = new System.Drawing.Size(180, 21); // Approx size, AutoSize should adjust
+            this.chkRealTimePreview.TabIndex = 28; // After Cargar (27) and Guardar (26) - wait, Guardar is 26, Cargar 27. So this should be 28.
+            this.chkRealTimePreview.Text = "Vista Previa en Tiempo Real";
+            this.chkRealTimePreview.UseVisualStyleBackColor = true;
+            this.chkRealTimePreview.CheckedChanged += new System.EventHandler(this.chkRealTimePreview_CheckedChanged);
+            this.Controls.Add(this.chkRealTimePreview);
         }
+
+        private void chkRealTimePreview_CheckedChanged(object sender, EventArgs e)
+        {
+            this.realTimePreviewEnabled = this.chkRealTimePreview.Checked;
+            if (!this.realTimePreviewEnabled)
+            {
+                this.activeRealTimeFilter = null; // Clear active preview filter when disabling
+                // If video was playing, it will now use processedFrames.
+                // If it was paused, it remains paused.
+                // We might want to refresh the current frame to show the non-realtime version.
+                if (processedFrames != null && processedFrames.Count > 0 && currentFrameIndex < processedFrames.Count)
+                {
+                    currentFrame?.Dispose();
+                    currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                    pictureBox1.Image = currentFrame;
+                    UpdateHistograms();
+                }
+                else if (originalFrames != null && originalFrames.Count > 0 && currentFrameIndex < originalFrames.Count)
+                {
+                    // Fallback if processedFrames is empty but original is not (e.g. before any filter applied)
+                    currentFrame?.Dispose();
+                    currentFrame = (Bitmap)originalFrames[currentFrameIndex].Clone();
+                    pictureBox1.Image = currentFrame;
+                    UpdateHistograms();
+                }
+            }
+            else
+            {
+                // When enabling, if a filter was last applied, it's not automatically set as activeRealTimeFilter.
+                // User needs to click a filter button again to make it active for real-time.
+                // Refresh current frame to show original if real-time is on but no filter active yet.
+                if (this.activeRealTimeFilter == null && originalFrames != null && originalFrames.Count > 0 && currentFrameIndex < originalFrames.Count)
+                {
+                    currentFrame?.Dispose();
+                    currentFrame = (Bitmap)originalFrames[currentFrameIndex].Clone();
+                    pictureBox1.Image = currentFrame;
+                    UpdateHistograms();
+                }
+            }
+        }
+
 
         private void Form3_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -90,85 +148,97 @@ namespace Proc_Image
                 return;
             }
 
+            // When a full filter application is done, disable real-time preview for that filter.
+            this.activeRealTimeFilter = null;
+            if (this.chkRealTimePreview != null) { this.chkRealTimePreview.Checked = false; }
+            this.realTimePreviewEnabled = false;
+
+
             bool wasPlaying = isPlaying;
             if (isPlaying)
             {
                 playbackTimer.Stop();
                 isPlaying = false;
-                // BTN_Continuar.Text = "Continuar"; // Optionally update button text
+                BTN_Continuar.Text = "Continuar";
             }
 
-            // Clear previous processed frames and dispose them
             processedFrames.ForEach(f => f.Dispose());
             processedFrames.Clear();
 
-            Cursor = Cursors.WaitCursor; // Show busy cursor
+            Cursor = Cursors.WaitCursor;
 
             try
             {
                 for (int i = 0; i < originalFrames.Count; i++)
                 {
-                    Bitmap originalFrame = originalFrames[i];
-                    // Apply filter. Assuming IFilter creates a new image. 
-                    // If it's an IInPlaceFilter, originalFrame itself would be modified if not cloned.
-                    Bitmap processedFrame = filter.Apply(originalFrame); 
-                    processedFrames.Add(processedFrame);
+                    Bitmap originalBitmap = originalFrames[i];
+                    Bitmap processedBitmap;
+
+                    if (filter is IInPlaceFilter inPlaceFilter)
+                    {
+                        Bitmap clonedFrame = (Bitmap)originalBitmap.Clone();
+                        inPlaceFilter.ApplyInPlace(clonedFrame);
+                        processedBitmap = clonedFrame;
+                    }
+                    else
+                    {
+                        processedBitmap = filter.Apply(originalBitmap);
+                    }
+                    processedFrames.Add(processedBitmap);
                 }
 
-                // Update currentFrame to reflect the change at the currentFrameIndex
-                if (currentFrameIndex < processedFrames.Count)
+                if (processedFrames.Count > 0)
                 {
+                    if (currentFrameIndex >= processedFrames.Count)
+                    {
+                        currentFrameIndex = 0;
+                    }
                     currentFrame?.Dispose();
                     currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
                     pictureBox1.Image = currentFrame;
                     UpdateHistograms();
                 }
-                else if (processedFrames.Count > 0) // If index was out of bounds, reset to first frame
+                else
                 {
-                    currentFrameIndex = 0;
                     currentFrame?.Dispose();
-                    currentFrame = (Bitmap)processedFrames[0].Clone();
-                    pictureBox1.Image = currentFrame;
+                    currentFrame = null;
+                    pictureBox1.Image = null;
                     UpdateHistograms();
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error aplicando el filtro: {ex.Message}", "Error de Filtro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // Restore processedFrames from originalFrames if filter failed mid-way
                 processedFrames.ForEach(f => f.Dispose());
                 processedFrames.Clear();
-                foreach (Bitmap originalFrame in originalFrames)
+                foreach (Bitmap originalBitmap in originalFrames)
                 {
-                    processedFrames.Add((Bitmap)originalFrame.Clone());
+                    processedFrames.Add((Bitmap)originalBitmap.Clone());
                 }
-                // Restore currentFrame display
-                if (currentFrameIndex < processedFrames.Count)
+
+                if (processedFrames.Count > 0)
                 {
+                    if (currentFrameIndex >= processedFrames.Count) currentFrameIndex = 0;
                     currentFrame?.Dispose();
                     currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
                     pictureBox1.Image = currentFrame;
-                    UpdateHistograms();
                 }
-                else if (processedFrames.Count > 0) // If index became invalid
+                else
                 {
-                    currentFrameIndex = 0;
-                    currentFrame?.Dispose();
-                    currentFrame = (Bitmap)processedFrames[0].Clone();
-                    pictureBox1.Image = currentFrame;
-                    UpdateHistograms();
+                    pictureBox1.Image = null;
                 }
+                UpdateHistograms();
             }
             finally
             {
-                Cursor = Cursors.Default; // Restore cursor
+                Cursor = Cursors.Default;
             }
 
             if (wasPlaying)
             {
                 playbackTimer.Start();
                 isPlaying = true;
-                // BTN_Continuar.Text = "Pausar"; // Optionally update button text
+                BTN_Continuar.Text = "Pausar";
             }
         }
 
@@ -185,15 +255,14 @@ namespace Proc_Image
             chartControl.Series.Add(series);
             chartControl.ChartAreas[0].AxisX.Minimum = 0;
             chartControl.ChartAreas[0].AxisX.Maximum = 255;
-            chartControl.ChartAreas[0].AxisY.LabelStyle.Enabled = false; // Keep Y labels off for cleaner look
-            chartControl.ChartAreas[0].AxisX.LabelStyle.Enabled = false; // Keep X labels off
+            chartControl.ChartAreas[0].AxisY.LabelStyle.Enabled = false;
+            chartControl.ChartAreas[0].AxisX.LabelStyle.Enabled = false;
             chartControl.ChartAreas[0].RecalculateAxesScale();
         }
 
         private void UpdateHistograms()
         {
-            // Ensure chart controls are named chart1, chart2, chart3 as in Form2 and Form3.Designer.cs
-            if (currentFrame == null || pictureBox1.Image == null) // Check pictureBox1.Image as well, as currentFrame might be set before UI update
+            if (currentFrame == null || pictureBox1.Image == null)
             {
                 if (chart1.Series != null) chart1.Series.Clear();
                 if (chart2.Series != null) chart2.Series.Clear();
@@ -204,25 +273,18 @@ namespace Proc_Image
             Bitmap bitmapForStats = null;
             try
             {
-                // It's crucial that currentFrame is not disposed while stats are being calculated.
-                // Clone it if there's any doubt, or ensure lifecycle is managed.
-                // For video frames that are frequently updated, using the direct currentFrame should be fine
-                // as long as it's not disposed by another thread during this operation.
-                // Let's proceed with a clone to be safe, given the video context.
                 bitmapForStats = (Bitmap)currentFrame.Clone();
-
-                // Ensure bitmap is in a format supported by ImageStatistics
                 if (bitmapForStats.PixelFormat != PixelFormat.Format24bppRgb &&
                     bitmapForStats.PixelFormat != PixelFormat.Format32bppArgb &&
-                    bitmapForStats.PixelFormat != PixelFormat.Format8bppIndexed) // Grayscale
+                    bitmapForStats.PixelFormat != PixelFormat.Format8bppIndexed)
                 {
                     Bitmap tempBitmap = new Bitmap(bitmapForStats.Width, bitmapForStats.Height, PixelFormat.Format24bppRgb);
                     using (Graphics g = Graphics.FromImage(tempBitmap))
                     {
                         g.DrawImage(bitmapForStats, 0, 0);
                     }
-                    bitmapForStats.Dispose(); // Dispose the previous clone
-                    bitmapForStats = tempBitmap; // Assign the new 24bppRgb bitmap
+                    bitmapForStats.Dispose();
+                    bitmapForStats = tempBitmap;
                 }
 
                 AForge.Imaging.ImageStatistics stats = new AForge.Imaging.ImageStatistics(bitmapForStats);
@@ -243,61 +305,157 @@ namespace Proc_Image
             catch (Exception ex)
             {
                 Console.WriteLine("Error updating histograms for video frame: " + ex.Message);
-                // Optionally, display a message to the user or log more formally
                 if (chart1.Series != null) chart1.Series.Clear();
                 if (chart2.Series != null) chart2.Series.Clear();
                 if (chart3.Series != null) chart3.Series.Clear();
             }
             finally
             {
-                // Dispose the bitmapForStats if it was created/cloned
                 bitmapForStats?.Dispose();
             }
         }
 
         private void PlaybackTimer_Tick(object sender, EventArgs e)
         {
-            if (!isPlaying || processedFrames == null || processedFrames.Count == 0)
+            if (!isPlaying) return;
+
+            List<Bitmap> sourceListForTick = (realTimePreviewEnabled && activeRealTimeFilter != null) ? originalFrames : (realTimePreviewEnabled ? originalFrames : processedFrames);
+
+            if (sourceListForTick == null || sourceListForTick.Count == 0)
             {
+                // This case might happen if realTimePreviewEnabled is true, but originalFrames is empty.
+                // Or if not realTimePreviewEnabled, but processedFrames is empty.
+                playbackTimer.Stop();
+                isPlaying = false;
+                isPaused = false;
+                BTN_Continuar.Text = "Continuar";
                 return;
             }
 
             currentFrameIndex++;
 
-            if (currentFrameIndex >= processedFrames.Count) // End of video
+            if (currentFrameIndex >= sourceListForTick.Count)
             {
-                currentFrameIndex = 0; // Loop back to the beginning
-                playbackTimer.Stop();
-                isPlaying = false;
-                isPaused = false; 
-                BTN_Continuar.Text = "Continuar";
-                
-                currentFrame?.Dispose();
-                currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                currentFrameIndex = 0;
+                // Stop if not in real-time preview with an active filter, or if simply looping processed frames.
+                // If realTimePreviewEnabled AND activeRealTimeFilter IS NOT NULL, it means we want to loop the preview.
+                if (!realTimePreviewEnabled || activeRealTimeFilter == null)
+                {
+                    playbackTimer.Stop();
+                    isPlaying = false;
+                    isPaused = false;
+                    BTN_Continuar.Text = "Continuar";
+                }
+                // If it stops, display the first frame. If it loops for real-time preview, it will also display the first frame (of the preview).
+            }
+
+            currentFrame?.Dispose(); // Dispose the old currentFrame
+
+            if (realTimePreviewEnabled && activeRealTimeFilter != null)
+            {
+                if (currentFrameIndex < originalFrames.Count) // Ensure index is valid for originalFrames
+                {
+                    Bitmap originalTickFrame = originalFrames[currentFrameIndex];
+                    Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
+                    if (activeRealTimeFilter is IInPlaceFilter inPlaceFilter)
+                    {
+                        inPlaceFilter.ApplyInPlace(frameToProcess);
+                        currentFrame = frameToProcess;
+                    }
+                    else // IFilter
+                    {
+                        currentFrame = activeRealTimeFilter.Apply(frameToProcess);
+                        frameToProcess.Dispose(); // Dispose the clone as Apply returns a new bitmap
+                    }
+                }
+                else if (originalFrames.Count > 0) // Fallback if index became invalid somehow
+                {
+                    currentFrameIndex = 0; // Reset to be safe
+                    Bitmap originalTickFrame = originalFrames[currentFrameIndex];
+                    Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
+                    if (activeRealTimeFilter is IInPlaceFilter inPlaceFilter) { inPlaceFilter.ApplyInPlace(frameToProcess); currentFrame = frameToProcess; }
+                    else { currentFrame = activeRealTimeFilter.Apply(frameToProcess); frameToProcess.Dispose(); }
+
+                }
+                else
+                { // No original frames to preview
+                    playbackTimer.Stop(); isPlaying = false; isPaused = false; BTN_Continuar.Text = "Continuar"; return;
+                }
+            }
+            else if (realTimePreviewEnabled) // Real-time preview enabled, but no active filter (show original)
+            {
+                if (currentFrameIndex < originalFrames.Count)
+                {
+                    currentFrame = (Bitmap)originalFrames[currentFrameIndex].Clone();
+                }
+                else if (originalFrames.Count > 0)
+                {
+                    currentFrameIndex = 0; // Reset to be safe
+                    currentFrame = (Bitmap)originalFrames[currentFrameIndex].Clone();
+                }
+                else
+                { // No original frames
+                    playbackTimer.Stop(); isPlaying = false; isPaused = false; BTN_Continuar.Text = "Continuar"; return;
+                }
+            }
+            else // Not in real-time preview (show processed frames)
+            {
+                if (currentFrameIndex < processedFrames.Count)
+                {
+                    currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                }
+                else if (processedFrames.Count > 0)
+                {
+                    currentFrameIndex = 0; // Reset to be safe
+                    currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                }
+                else
+                { // No processed frames
+                    playbackTimer.Stop(); isPlaying = false; isPaused = false; BTN_Continuar.Text = "Continuar"; return;
+                }
+            }
+
+            if (currentFrame != null)
+            {
+                pictureBox1.Image = currentFrame;
+                UpdateHistograms();
             }
             else
             {
-                currentFrame?.Dispose();
-                currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                // Handle case where currentFrame could not be set (e.g. sourceListForTick was empty after all checks)
+                playbackTimer.Stop();
+                isPlaying = false;
+                isPaused = false;
+                BTN_Continuar.Text = "Continuar";
+                pictureBox1.Image = null;
+                UpdateHistograms();
             }
-
-            pictureBox1.Image = currentFrame;
-            UpdateHistograms();
         }
+
 
         private void BTN_Continuar_Click(object sender, EventArgs e)
         {
-            if (originalFrames == null || originalFrames.Count == 0) return;
+            MessageBox.Show("BTN_Continuar_Click called!"); // <--- ADD THIS LINE
+            List<Bitmap> relevantFrames = realTimePreviewEnabled ? originalFrames : processedFrames;
+            if (relevantFrames == null || relevantFrames.Count == 0)
+            {
+                MessageBox.Show("No hay video cargado para reproducir.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            if (isPlaying) // Video is playing, so pause it
+            if (isPlaying)
             {
                 playbackTimer.Stop();
                 isPlaying = false;
                 isPaused = true;
                 BTN_Continuar.Text = "Continuar";
             }
-            else // Video is paused or stopped, so play it
+            else
             {
+                if (currentFrameIndex == relevantFrames.Count - 1 && !isPaused)
+                {
+                    currentFrameIndex = -1;
+                }
                 playbackTimer.Start();
                 isPlaying = true;
                 isPaused = false;
@@ -307,43 +465,59 @@ namespace Proc_Image
 
         private void BTN_Parar_Click(object sender, EventArgs e)
         {
-            if (originalFrames == null || originalFrames.Count == 0) return;
+            List<Bitmap> sourceList = realTimePreviewEnabled ? originalFrames : processedFrames;
+            if (sourceList == null || sourceList.Count == 0) return;
 
             playbackTimer.Stop();
             isPlaying = false;
             isPaused = false;
             currentFrameIndex = 0;
 
-            if (processedFrames.Count > 0)
+            currentFrame?.Dispose();
+            if (realTimePreviewEnabled && activeRealTimeFilter != null)
             {
-                currentFrame?.Dispose();
-                currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
-                pictureBox1.Image = currentFrame;
-                UpdateHistograms();
+                Bitmap originalTickFrame = sourceList[currentFrameIndex];
+                Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
+                if (activeRealTimeFilter is IInPlaceFilter inPlaceFilter) { inPlaceFilter.ApplyInPlace(frameToProcess); currentFrame = frameToProcess; }
+                else { currentFrame = activeRealTimeFilter.Apply(frameToProcess); frameToProcess.Dispose(); }
             }
+            else
+            {
+                currentFrame = (Bitmap)sourceList[currentFrameIndex].Clone();
+            }
+            pictureBox1.Image = currentFrame;
+            UpdateHistograms();
             BTN_Continuar.Text = "Continuar";
         }
 
         private void BTN_Retroceder_Click(object sender, EventArgs e)
         {
-            if (originalFrames == null || originalFrames.Count == 0) return;
+            List<Bitmap> sourceList = realTimePreviewEnabled ? originalFrames : processedFrames;
+            if (sourceList == null || sourceList.Count == 0) return;
 
-            playbackTimer.Stop();
+            playbackTimer.Stop(); // Stop playback
             isPlaying = false;
-            isPaused = false;
+            isPaused = true; // Effectively paused at the beginning
             currentFrameIndex = 0;
 
-            if (processedFrames.Count > 0)
+            currentFrame?.Dispose();
+            if (realTimePreviewEnabled && activeRealTimeFilter != null)
             {
-                currentFrame?.Dispose();
-                currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
-                pictureBox1.Image = currentFrame;
-                UpdateHistograms();
+                Bitmap originalTickFrame = sourceList[currentFrameIndex];
+                Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
+                if (activeRealTimeFilter is IInPlaceFilter inPlaceFilter) { inPlaceFilter.ApplyInPlace(frameToProcess); currentFrame = frameToProcess; }
+                else { currentFrame = activeRealTimeFilter.Apply(frameToProcess); frameToProcess.Dispose(); }
             }
-            BTN_Continuar.Text = "Continuar";
+            else
+            {
+                currentFrame = (Bitmap)sourceList[currentFrameIndex].Clone();
+            }
+            pictureBox1.Image = currentFrame;
+            UpdateHistograms();
+            BTN_Continuar.Text = "Continuar"; // Ready to play from start
         }
 
-        private void button11_Click(object sender, EventArgs e)
+        private void button11_Click(object sender, EventArgs e) // Load Video
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -355,50 +529,29 @@ namespace Proc_Image
             {
                 try
                 {
-                    // Dispose existing resources
-                    if (videoReader != null)
-                    {
-                        videoReader.Close();
-                        videoReader.Dispose();
-                        videoReader = null;
-                    }
-                    if (currentFrame != null)
-                    {
-                        currentFrame.Dispose();
-                        currentFrame = null;
-                    }
-                    originalFrames.ForEach(f => f.Dispose());
-                    originalFrames.Clear();
-                    processedFrames.ForEach(f => f.Dispose());
-                    processedFrames.Clear();
+                    if (videoReader != null) { videoReader.Close(); videoReader.Dispose(); videoReader = null; }
+                    currentFrame?.Dispose(); currentFrame = null;
+                    originalFrames.ForEach(f => f.Dispose()); originalFrames.Clear();
+                    processedFrames.ForEach(f => f.Dispose()); processedFrames.Clear();
 
-                    isPlaying = false;
-                    isPaused = false;
-                    currentFrameIndex = 0;
-                    BTN_Continuar.Text = "Continuar"; // Assuming BTN_Continuar is the play/pause button
+                    isPlaying = false; isPaused = false; currentFrameIndex = 0;
+                    BTN_Continuar.Text = "Continuar";
+                    if (playbackTimer.Enabled) { playbackTimer.Stop(); }
 
-                    if (playbackTimer.Enabled)
-                    {
-                        playbackTimer.Stop();
-                    }
+                    // Reset real-time preview state
+                    this.activeRealTimeFilter = null;
+                    if (this.chkRealTimePreview != null) { this.chkRealTimePreview.Checked = false; }
+                    this.realTimePreviewEnabled = false;
 
                     videoReader = new VideoFileReader();
                     videoReader.Open(openFileDialog.FileName);
-
                     videoFrameRate = videoReader.FrameRate.ToDouble();
-                    videoWidth = videoReader.Width;
-                    videoHeight = videoReader.Height;
+                    videoWidth = videoReader.Width; videoHeight = videoReader.Height;
 
-                    if (videoFrameRate > 0)
-                    {
-                        playbackTimer.Interval = (int)(1000 / videoFrameRate);
-                    }
-                    else
-                    {
-                        // Default interval if frame rate is invalid
-                        playbackTimer.Interval = 100; 
-                    }
-                    
+                    if (videoFrameRate > 0 && !double.IsInfinity(videoFrameRate) && !double.IsNaN(videoFrameRate))
+                    { playbackTimer.Interval = (int)(1000 / videoFrameRate); }
+                    else { playbackTimer.Interval = 33; }
+
                     for (int i = 0; i < videoReader.FrameCount; i++)
                     {
                         Bitmap frame = videoReader.ReadVideoFrame();
@@ -407,227 +560,169 @@ namespace Proc_Image
                             originalFrames.Add(frame);
                             processedFrames.Add((Bitmap)frame.Clone());
                         }
-                        else
-                        {
-                            // Optional: Log or handle null frame if necessary
-                            break; 
-                        }
+                        else { break; }
                     }
 
-                    if (originalFrames.Count > 0)
+                    if (processedFrames.Count > 0)
                     {
-                        currentFrame = (Bitmap)originalFrames[0].Clone();
+                        currentFrameIndex = 0;
+                        currentFrame?.Dispose();
+                        currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
                         pictureBox1.Image = currentFrame;
-                        // TODO: Enable relevant buttons (e.g., Play, Stop, filter buttons)
                     }
-                    else
-                    {
-                        MessageBox.Show("No se pudieron leer los fotogramas del video.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-
+                    else { MessageBox.Show("No se pudieron leer los fotogramas del video.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                     UpdateHistograms();
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("Error al abrir o leer el video: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    // Ensure cleanup even on error
-                    if (videoReader != null)
-                    {
-                        videoReader.Close();
-                        videoReader.Dispose();
-                        videoReader = null;
-                    }
-                    originalFrames.ForEach(f => f.Dispose());
-                    originalFrames.Clear();
-                    processedFrames.ForEach(f => f.Dispose());
-                    processedFrames.Clear();
-                    if (currentFrame != null)
-                    {
-                        currentFrame.Dispose();
-                        currentFrame = null;
-                    }
-                    pictureBox1.Image = null;
-                    UpdateHistograms();
+                    if (videoReader != null) { videoReader.Close(); videoReader.Dispose(); videoReader = null; }
+                    originalFrames.ForEach(f => f.Dispose()); originalFrames.Clear();
+                    processedFrames.ForEach(f => f.Dispose()); processedFrames.Clear();
+                    currentFrame?.Dispose(); currentFrame = null;
+                    pictureBox1.Image = null; UpdateHistograms();
                 }
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e) // WaterWave (IFilter)
         {
-            WaterWave waterWaveFilter = new WaterWave();
-            waterWaveFilter.HorizontalWavesCount = 10;
-            waterWaveFilter.HorizontalWavesAmplitude = 5;
-            waterWaveFilter.VerticalWavesCount = 3;
-            waterWaveFilter.VerticalWavesAmplitude = 15;
-            ApplyFilterToAllFrames(waterWaveFilter);
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            if (originalFrames == null || originalFrames.Count == 0) { MessageBox.Show("Por favor, cargue un video primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-            bool wasPlaying = isPlaying; if (isPlaying) { playbackTimer.Stop(); isPlaying = false; }
-            processedFrames.ForEach(f => f.Dispose()); processedFrames.Clear();
-            Cursor = Cursors.WaitCursor;
-            try
+            if (originalFrames == null || originalFrames.Count == 0)
             {
-                SaltAndPepperNoise noiseFilter = new SaltAndPepperNoise();
-                noiseFilter.NoiseAmount = 0.05;
-                foreach (Bitmap originalFrame in originalFrames)
-                {
-                    Bitmap clonedFrame = (Bitmap)originalFrame.Clone(); // Clone for inplace filter
-                    noiseFilter.ApplyInPlace(clonedFrame);
-                    processedFrames.Add(clonedFrame);
-                }
-                if (currentFrameIndex < processedFrames.Count) { currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
-                else if (processedFrames.Count > 0) { currentFrameIndex = 0; currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[0].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
+                MessageBox.Show("Por favor, cargue un video primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return;
             }
-            catch (Exception ex) 
-            { 
-                MessageBox.Show($"Error aplicando el filtro: {ex.Message}", "Error de Filtro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // Restore processedFrames from originalFrames
-                processedFrames.ForEach(f => f.Dispose());
-                processedFrames.Clear();
-                if (originalFrames != null)
+            WaterWave filter = new WaterWave();
+            filter.HorizontalWavesCount = 10; filter.HorizontalWavesAmplitude = 5;
+            filter.VerticalWavesCount = 3; filter.VerticalWavesAmplitude = 15;
+
+            if (this.realTimePreviewEnabled)
+            {
+                this.activeRealTimeFilter = filter;
+                // Refresh current frame with preview
+                if (isPlaying && originalFrames.Count > 0) { /* PlaybackTimer_Tick will handle */ }
+                else if (originalFrames.Count > 0 && currentFrameIndex < originalFrames.Count)
                 {
-                    foreach (Bitmap originalBitmap in originalFrames)
-                    {
-                        processedFrames.Add((Bitmap)originalBitmap.Clone());
-                    }
-                }
-                // Restore currentFrame display from the (now restored) processedFrames
-                if (processedFrames.Count > 0) // Check if processedFrames has content after potential restoration
-                {
-                    if (currentFrameIndex >= processedFrames.Count) // Adjust index if it's now out of bounds
-                    {
-                        currentFrameIndex = 0;
-                    }
+                    Bitmap originalTickFrame = originalFrames[currentFrameIndex];
+                    Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
                     currentFrame?.Dispose();
-                    currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                    currentFrame = activeRealTimeFilter.Apply(frameToProcess); // WaterWave is IFilter
+                    frameToProcess.Dispose();
                     pictureBox1.Image = currentFrame;
                     UpdateHistograms();
                 }
-                else // If originalFrames was also empty or null, there's nothing to show
-                {
-                     pictureBox1.Image = null; // Or a placeholder image
-                }
             }
-            finally { Cursor = Cursors.Default; }
-            if (wasPlaying) { playbackTimer.Start(); isPlaying = true; }
+            else
+            {
+                this.activeRealTimeFilter = null;
+                ApplyFilterToAllFrames(filter);
+            }
         }
 
-        private void button8_Click(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e) // SaltAndPepper (IInPlaceFilter)
         {
-            if (originalFrames == null || originalFrames.Count == 0) { MessageBox.Show("Por favor, cargue un video primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-            bool wasPlaying = isPlaying; if (isPlaying) { playbackTimer.Stop(); isPlaying = false; }
-            processedFrames.ForEach(f => f.Dispose()); processedFrames.Clear();
-            Cursor = Cursors.WaitCursor;
-            try
+            if (originalFrames == null || originalFrames.Count == 0)
             {
-                GaussianBlur blurFilter = new GaussianBlur();
-                blurFilter.Sigma = 2;
-                blurFilter.Size = 5;
-                foreach (Bitmap originalFrame in originalFrames)
-                {
-                    Bitmap clonedFrame = (Bitmap)originalFrame.Clone();
-                    blurFilter.ApplyInPlace(clonedFrame);
-                    processedFrames.Add(clonedFrame);
-                }
-                if (currentFrameIndex < processedFrames.Count) { currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
-                else if (processedFrames.Count > 0) { currentFrameIndex = 0; currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[0].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
+                MessageBox.Show("Por favor, cargue un video primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return;
             }
-            catch (Exception ex) 
-            { 
-                MessageBox.Show($"Error aplicando el filtro: {ex.Message}", "Error de Filtro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // Restore processedFrames from originalFrames
-                processedFrames.ForEach(f => f.Dispose());
-                processedFrames.Clear();
-                if (originalFrames != null)
+            SaltAndPepperNoise filter = new SaltAndPepperNoise();
+            filter.NoiseAmount = 0.05;
+
+            if (this.realTimePreviewEnabled)
+            {
+                this.activeRealTimeFilter = filter;
+                if (isPlaying && originalFrames.Count > 0) { /* PlaybackTimer_Tick will handle */ }
+                else if (originalFrames.Count > 0 && currentFrameIndex < originalFrames.Count)
                 {
-                    foreach (Bitmap originalBitmap in originalFrames)
-                    {
-                        processedFrames.Add((Bitmap)originalBitmap.Clone());
-                    }
-                }
-                // Restore currentFrame display from the (now restored) processedFrames
-                if (processedFrames.Count > 0)
-                {
-                    if (currentFrameIndex >= processedFrames.Count)
-                    {
-                        currentFrameIndex = 0;
-                    }
+                    Bitmap originalTickFrame = originalFrames[currentFrameIndex];
+                    Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
                     currentFrame?.Dispose();
-                    currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                    ((IInPlaceFilter)activeRealTimeFilter).ApplyInPlace(frameToProcess); // SaltAndPepper is IInPlaceFilter
+                    currentFrame = frameToProcess;
                     pictureBox1.Image = currentFrame;
                     UpdateHistograms();
                 }
-                else
-                {
-                     pictureBox1.Image = null;
-                }
             }
-            finally { Cursor = Cursors.Default; }
-            if (wasPlaying) { playbackTimer.Start(); isPlaying = true; }
+            else
+            {
+                this.activeRealTimeFilter = null;
+                ApplyFilterToAllFrames(filter);
+            }
         }
 
-        private void button7_Click(object sender, EventArgs e)
+        private void button8_Click(object sender, EventArgs e) // GaussianBlur (IInPlaceFilter)
         {
-            if (originalFrames == null || originalFrames.Count == 0) { MessageBox.Show("Por favor, cargue un video primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-            bool wasPlaying = isPlaying; if (isPlaying) { playbackTimer.Stop(); isPlaying = false; }
-            processedFrames.ForEach(f => f.Dispose()); processedFrames.Clear();
-            Cursor = Cursors.WaitCursor;
-            try
+            if (originalFrames == null || originalFrames.Count == 0)
             {
-                Invert invertFilter = new Invert();
-                foreach (Bitmap originalFrame in originalFrames)
-                {
-                    Bitmap clonedFrame = (Bitmap)originalFrame.Clone();
-                    invertFilter.ApplyInPlace(clonedFrame);
-                    processedFrames.Add(clonedFrame);
-                }
-                if (currentFrameIndex < processedFrames.Count) { currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
-                else if (processedFrames.Count > 0) { currentFrameIndex = 0; currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[0].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
+                MessageBox.Show("Por favor, cargue un video primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return;
             }
-            catch (Exception ex) 
-            { 
-                MessageBox.Show($"Error aplicando el filtro: {ex.Message}", "Error de Filtro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // Restore processedFrames from originalFrames
-                processedFrames.ForEach(f => f.Dispose());
-                processedFrames.Clear();
-                if (originalFrames != null)
+            GaussianBlur filter = new GaussianBlur();
+            filter.Sigma = 2; filter.Size = 5;
+
+            if (this.realTimePreviewEnabled)
+            {
+                this.activeRealTimeFilter = filter;
+                if (isPlaying && originalFrames.Count > 0) { /* PlaybackTimer_Tick will handle */ }
+                else if (originalFrames.Count > 0 && currentFrameIndex < originalFrames.Count)
                 {
-                    foreach (Bitmap originalBitmap in originalFrames)
-                    {
-                        processedFrames.Add((Bitmap)originalBitmap.Clone());
-                    }
-                }
-                // Restore currentFrame display from the (now restored) processedFrames
-                if (processedFrames.Count > 0)
-                {
-                    if (currentFrameIndex >= processedFrames.Count)
-                    {
-                        currentFrameIndex = 0;
-                    }
+                    Bitmap originalTickFrame = originalFrames[currentFrameIndex];
+                    Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
                     currentFrame?.Dispose();
-                    currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
+                    ((IInPlaceFilter)activeRealTimeFilter).ApplyInPlace(frameToProcess);
+                    currentFrame = frameToProcess;
                     pictureBox1.Image = currentFrame;
                     UpdateHistograms();
                 }
-                else
-                {
-                     pictureBox1.Image = null;
-                }
             }
-            finally { Cursor = Cursors.Default; }
-            if (wasPlaying) { playbackTimer.Start(); isPlaying = true; }
+            else
+            {
+                this.activeRealTimeFilter = null;
+                ApplyFilterToAllFrames(filter);
+            }
         }
 
-        private void button12_Click(object sender, EventArgs e)
+        private void button7_Click(object sender, EventArgs e) // Invert (IInPlaceFilter)
+        {
+            if (originalFrames == null || originalFrames.Count == 0)
+            {
+                MessageBox.Show("Por favor, cargue un video primero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return;
+            }
+            Invert filter = new Invert();
+
+            if (this.realTimePreviewEnabled)
+            {
+                this.activeRealTimeFilter = filter;
+                if (isPlaying && originalFrames.Count > 0) { /* PlaybackTimer_Tick will handle */ }
+                else if (originalFrames.Count > 0 && currentFrameIndex < originalFrames.Count)
+                {
+                    Bitmap originalTickFrame = originalFrames[currentFrameIndex];
+                    Bitmap frameToProcess = (Bitmap)originalTickFrame.Clone();
+                    currentFrame?.Dispose();
+                    ((IInPlaceFilter)activeRealTimeFilter).ApplyInPlace(frameToProcess);
+                    currentFrame = frameToProcess;
+                    pictureBox1.Image = currentFrame;
+                    UpdateHistograms();
+                }
+            }
+            else
+            {
+                this.activeRealTimeFilter = null;
+                ApplyFilterToAllFrames(filter);
+            }
+        }
+
+        private void button12_Click(object sender, EventArgs e) // Save Video
         {
             if (processedFrames == null || processedFrames.Count == 0)
             {
-                MessageBox.Show("No hay video para guardar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No hay video procesado para guardar. Aplique un filtro primero si desea guardar los cambios.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            if (realTimePreviewEnabled && activeRealTimeFilter != null)
+            {
+                MessageBox.Show("Desactive la 'Vista Previa en Tiempo Real' y aplique el filtro de forma permanente antes de guardar.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
 
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
@@ -640,18 +735,14 @@ namespace Proc_Image
             {
                 videoWriter = new VideoFileWriter();
                 string filePath = saveFileDialog.FileName;
-
                 try
                 {
-                    // Ensure video properties are valid before opening the writer
                     if (videoWidth <= 0 || videoHeight <= 0 || videoFrameRate <= 0)
                     {
                         MessageBox.Show("Las propiedades del video (ancho, alto, FPS) no son válidas.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
-
                     videoWriter.Open(filePath, videoWidth, videoHeight, (int)Math.Round(videoFrameRate), Accord.Video.FFMPEG.VideoCodec.MPEG4, 1000000);
-
                     foreach (Bitmap frame in processedFrames)
                     {
                         videoWriter.WriteVideoFrame(frame);
@@ -659,17 +750,10 @@ namespace Proc_Image
                     MessageBox.Show("Video guardado exitosamente!", "Guardado", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show("Error al guardar el video: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                { MessageBox.Show("Error al guardar el video: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 finally
                 {
-                    if (videoWriter != null)
-                    {
-                        videoWriter.Close();
-                        videoWriter.Dispose();
-                        videoWriter = null;
-                    }
+                    if (videoWriter != null) { videoWriter.Close(); videoWriter.Dispose(); videoWriter = null; }
                 }
             }
         }
