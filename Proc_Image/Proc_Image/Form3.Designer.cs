@@ -28,15 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend6 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.button11 = new System.Windows.Forms.Button();
             this.button12 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
@@ -54,6 +54,9 @@
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart2 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.chart3 = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.BTN_Parar = new System.Windows.Forms.Button();
+            this.BTN_Continuar = new System.Windows.Forms.Button();
+            this.BTN_Retroceder = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart2)).BeginInit();
@@ -155,7 +158,7 @@
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(155, 56);
             this.button5.TabIndex = 20;
-            this.button5.Text = "Mosaico";
+            this.button5.Text = "Comic";
             this.button5.UseVisualStyleBackColor = true;
             // 
             // button4
@@ -245,58 +248,100 @@
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(157, 56);
             this.button6.TabIndex = 21;
-            this.button6.Text = "Suavisado";
+            this.button6.Text = "Termico";
             this.button6.UseVisualStyleBackColor = true;
             // 
             // chart1
             // 
-            chartArea1.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chart1.Legends.Add(legend1);
+            chartArea4.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea4);
+            legend4.Name = "Legend1";
+            this.chart1.Legends.Add(legend4);
             this.chart1.Location = new System.Drawing.Point(12, 12);
             this.chart1.Name = "chart1";
-            series1.ChartArea = "ChartArea1";
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            this.chart1.Series.Add(series1);
+            series4.ChartArea = "ChartArea1";
+            series4.Legend = "Legend1";
+            series4.Name = "Series1";
+            this.chart1.Series.Add(series4);
             this.chart1.Size = new System.Drawing.Size(300, 114);
             this.chart1.TabIndex = 28;
             this.chart1.Text = "chart1";
             // 
             // chart2
             // 
-            chartArea2.Name = "ChartArea1";
-            this.chart2.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.chart2.Legends.Add(legend2);
+            chartArea5.Name = "ChartArea1";
+            this.chart2.ChartAreas.Add(chartArea5);
+            legend5.Name = "Legend1";
+            this.chart2.Legends.Add(legend5);
             this.chart2.Location = new System.Drawing.Point(12, 132);
             this.chart2.Name = "chart2";
             this.chart2.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Bright;
-            series2.ChartArea = "ChartArea1";
-            series2.Legend = "Legend1";
-            series2.Name = "Series2";
-            this.chart2.Series.Add(series2);
+            series5.ChartArea = "ChartArea1";
+            series5.Legend = "Legend1";
+            series5.Name = "Series2";
+            this.chart2.Series.Add(series5);
             this.chart2.Size = new System.Drawing.Size(300, 114);
             this.chart2.TabIndex = 29;
             this.chart2.Text = "chart2";
             // 
             // chart3
             // 
-            chartArea3.Name = "ChartArea1";
-            this.chart3.ChartAreas.Add(chartArea3);
-            legend3.Name = "Legend1";
-            this.chart3.Legends.Add(legend3);
+            chartArea6.Name = "ChartArea1";
+            this.chart3.ChartAreas.Add(chartArea6);
+            legend6.Name = "Legend1";
+            this.chart3.Legends.Add(legend6);
             this.chart3.Location = new System.Drawing.Point(777, 55);
             this.chart3.Name = "chart3";
             this.chart3.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Chocolate;
-            series3.ChartArea = "ChartArea1";
-            series3.Legend = "Legend1";
-            series3.Name = "Series3";
-            this.chart3.Series.Add(series3);
+            series6.ChartArea = "ChartArea1";
+            series6.Legend = "Legend1";
+            series6.Name = "Series3";
+            this.chart3.Series.Add(series6);
             this.chart3.Size = new System.Drawing.Size(300, 114);
             this.chart3.TabIndex = 30;
             this.chart3.Text = "chart3";
+            // 
+            // BTN_Parar
+            // 
+            this.BTN_Parar.AutoSize = true;
+            this.BTN_Parar.BackgroundImage = global::Proc_Image.Properties.Resources._7fa2a2b004ceb661137e13f0defa391c;
+            this.BTN_Parar.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.BTN_Parar.Font = new System.Drawing.Font("MingLiU_HKSCS-ExtB", 16.2F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BTN_Parar.ForeColor = System.Drawing.SystemColors.ButtonShadow;
+            this.BTN_Parar.Location = new System.Drawing.Point(400, 618);
+            this.BTN_Parar.Name = "BTN_Parar";
+            this.BTN_Parar.Size = new System.Drawing.Size(155, 56);
+            this.BTN_Parar.TabIndex = 31;
+            this.BTN_Parar.Text = "Parar";
+            this.BTN_Parar.UseVisualStyleBackColor = true;
+            // 
+            // BTN_Continuar
+            // 
+            this.BTN_Continuar.AutoSize = true;
+            this.BTN_Continuar.BackgroundImage = global::Proc_Image.Properties.Resources._7fa2a2b004ceb661137e13f0defa391c;
+            this.BTN_Continuar.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.BTN_Continuar.Font = new System.Drawing.Font("MingLiU_HKSCS-ExtB", 16.2F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BTN_Continuar.ForeColor = System.Drawing.SystemColors.ButtonShadow;
+            this.BTN_Continuar.Location = new System.Drawing.Point(561, 618);
+            this.BTN_Continuar.Name = "BTN_Continuar";
+            this.BTN_Continuar.Size = new System.Drawing.Size(157, 56);
+            this.BTN_Continuar.TabIndex = 32;
+            this.BTN_Continuar.Text = "Continuar";
+            this.BTN_Continuar.UseVisualStyleBackColor = true;
+            // 
+            // BTN_Retroceder
+            // 
+            this.BTN_Retroceder.AutoSize = true;
+            this.BTN_Retroceder.BackgroundImage = global::Proc_Image.Properties.Resources._7fa2a2b004ceb661137e13f0defa391c;
+            this.BTN_Retroceder.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.BTN_Retroceder.Font = new System.Drawing.Font("MingLiU_HKSCS-ExtB", 16.2F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BTN_Retroceder.ForeColor = System.Drawing.SystemColors.ButtonShadow;
+            this.BTN_Retroceder.Location = new System.Drawing.Point(722, 618);
+            this.BTN_Retroceder.Name = "BTN_Retroceder";
+            this.BTN_Retroceder.Size = new System.Drawing.Size(172, 56);
+            this.BTN_Retroceder.TabIndex = 33;
+            this.BTN_Retroceder.Text = "Retroceder";
+            this.BTN_Retroceder.UseVisualStyleBackColor = true;
             // 
             // Form3
             // 
@@ -305,6 +350,9 @@
             this.BackgroundImage = global::Proc_Image.Properties.Resources._3;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(1111, 752);
+            this.Controls.Add(this.BTN_Retroceder);
+            this.Controls.Add(this.BTN_Continuar);
+            this.Controls.Add(this.BTN_Parar);
             this.Controls.Add(this.chart3);
             this.Controls.Add(this.chart2);
             this.Controls.Add(this.chart1);
@@ -352,5 +400,8 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chart1;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart2;
         private System.Windows.Forms.DataVisualization.Charting.Chart chart3;
+        private System.Windows.Forms.Button BTN_Parar;
+        private System.Windows.Forms.Button BTN_Continuar;
+        private System.Windows.Forms.Button BTN_Retroceder;
     }
 }
