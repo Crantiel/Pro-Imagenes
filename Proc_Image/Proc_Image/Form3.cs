@@ -7,7 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using AForge.Video.FFMPEG;
+using Accord.Video;
+using Accord.Video.FFMPEG;
 using System.IO;
 using System.Drawing.Imaging;
 using AForge.Imaging.Filters;
@@ -110,7 +111,7 @@ namespace Proc_Image
                     Bitmap originalFrame = originalFrames[i];
                     // Apply filter. Assuming IFilter creates a new image. 
                     // If it's an IInPlaceFilter, originalFrame itself would be modified if not cloned.
-                    Bitmap processedFrame = filter.Apply(originalFrame);
+                    Bitmap processedFrame = filter.Apply(originalFrame); 
                     processedFrames.Add(processedFrame);
                 }
 
@@ -268,9 +269,9 @@ namespace Proc_Image
                 currentFrameIndex = 0; // Loop back to the beginning
                 playbackTimer.Stop();
                 isPlaying = false;
-                isPaused = false;
+                isPaused = false; 
                 BTN_Continuar.Text = "Continuar";
-
+                
                 currentFrame?.Dispose();
                 currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone();
             }
@@ -384,7 +385,7 @@ namespace Proc_Image
                     videoReader = new VideoFileReader();
                     videoReader.Open(openFileDialog.FileName);
 
-                    videoFrameRate = (double)videoReader.FrameRate; //  Correcto
+                    videoFrameRate = videoReader.FrameRate.ToDouble();
                     videoWidth = videoReader.Width;
                     videoHeight = videoReader.Height;
 
@@ -395,9 +396,9 @@ namespace Proc_Image
                     else
                     {
                         // Default interval if frame rate is invalid
-                        playbackTimer.Interval = 100;
+                        playbackTimer.Interval = 100; 
                     }
-
+                    
                     for (int i = 0; i < videoReader.FrameCount; i++)
                     {
                         Bitmap frame = videoReader.ReadVideoFrame();
@@ -409,7 +410,7 @@ namespace Proc_Image
                         else
                         {
                             // Optional: Log or handle null frame if necessary
-                            break;
+                            break; 
                         }
                     }
 
@@ -480,8 +481,8 @@ namespace Proc_Image
                 if (currentFrameIndex < processedFrames.Count) { currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
                 else if (processedFrames.Count > 0) { currentFrameIndex = 0; currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[0].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) 
+            { 
                 MessageBox.Show($"Error aplicando el filtro: {ex.Message}", "Error de Filtro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 // Restore processedFrames from originalFrames
                 processedFrames.ForEach(f => f.Dispose());
@@ -507,7 +508,7 @@ namespace Proc_Image
                 }
                 else // If originalFrames was also empty or null, there's nothing to show
                 {
-                    pictureBox1.Image = null; // Or a placeholder image
+                     pictureBox1.Image = null; // Or a placeholder image
                 }
             }
             finally { Cursor = Cursors.Default; }
@@ -534,8 +535,8 @@ namespace Proc_Image
                 if (currentFrameIndex < processedFrames.Count) { currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
                 else if (processedFrames.Count > 0) { currentFrameIndex = 0; currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[0].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) 
+            { 
                 MessageBox.Show($"Error aplicando el filtro: {ex.Message}", "Error de Filtro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 // Restore processedFrames from originalFrames
                 processedFrames.ForEach(f => f.Dispose());
@@ -561,7 +562,7 @@ namespace Proc_Image
                 }
                 else
                 {
-                    pictureBox1.Image = null;
+                     pictureBox1.Image = null;
                 }
             }
             finally { Cursor = Cursors.Default; }
@@ -586,8 +587,8 @@ namespace Proc_Image
                 if (currentFrameIndex < processedFrames.Count) { currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[currentFrameIndex].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
                 else if (processedFrames.Count > 0) { currentFrameIndex = 0; currentFrame?.Dispose(); currentFrame = (Bitmap)processedFrames[0].Clone(); pictureBox1.Image = currentFrame; UpdateHistograms(); }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) 
+            { 
                 MessageBox.Show($"Error aplicando el filtro: {ex.Message}", "Error de Filtro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 // Restore processedFrames from originalFrames
                 processedFrames.ForEach(f => f.Dispose());
@@ -613,7 +614,7 @@ namespace Proc_Image
                 }
                 else
                 {
-                    pictureBox1.Image = null;
+                     pictureBox1.Image = null;
                 }
             }
             finally { Cursor = Cursors.Default; }
@@ -649,7 +650,7 @@ namespace Proc_Image
                         return;
                     }
 
-                    videoWriter.Open(filePath, videoWidth, videoHeight, (int)Math.Round(videoFrameRate), VideoCodec.Default, 1000000);
+                    videoWriter.Open(filePath, videoWidth, videoHeight, (int)Math.Round(videoFrameRate), Accord.Video.FFMPEG.VideoCodec.MPEG4, 1000000);
 
                     foreach (Bitmap frame in processedFrames)
                     {
