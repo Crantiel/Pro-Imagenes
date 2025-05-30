@@ -435,7 +435,6 @@ namespace Proc_Image
 
         private void BTN_Continuar_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("BTN_Continuar_Click called!"); // <--- ADD THIS LINE
             List<Bitmap> relevantFrames = realTimePreviewEnabled ? originalFrames : processedFrames;
             if (relevantFrames == null || relevantFrames.Count == 0)
             {

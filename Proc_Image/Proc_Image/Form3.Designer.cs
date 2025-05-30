@@ -28,15 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend6 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea43 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend43 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series43 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea44 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend44 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series44 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea45 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend45 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series45 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.button11 = new System.Windows.Forms.Button();
             this.button12 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
@@ -76,6 +76,7 @@
             this.button11.TabIndex = 27;
             this.button11.Text = "Cargar";
             this.button11.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.button11_Click);
             // 
             // button12
             // 
@@ -90,6 +91,7 @@
             this.button12.TabIndex = 26;
             this.button12.Text = "Guardar";
             this.button12.UseVisualStyleBackColor = true;
+            this.button12.Click += new System.EventHandler(this.button12_Click);
             // 
             // button7
             // 
@@ -104,6 +106,7 @@
             this.button7.TabIndex = 25;
             this.button7.Text = "Negativo";
             this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // button8
             // 
@@ -118,6 +121,7 @@
             this.button8.TabIndex = 24;
             this.button8.Text = "Blur";
             this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // button9
             // 
@@ -132,6 +136,7 @@
             this.button9.TabIndex = 22;
             this.button9.Text = "Binarización";
             this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // button10
             // 
@@ -146,6 +151,7 @@
             this.button10.TabIndex = 23;
             this.button10.Text = "Pixel";
             this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.button10_Click);
             // 
             // button5
             // 
@@ -160,6 +166,7 @@
             this.button5.TabIndex = 20;
             this.button5.Text = "Comic";
             this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
             // button4
             // 
@@ -174,7 +181,7 @@
             this.button4.TabIndex = 18;
             this.button4.Text = "Croma";
             this.button4.UseVisualStyleBackColor = true;
-            this.button11.Click += new System.EventHandler(this.button11_Click); // CORRECTLY PLACED LINE
+            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // button3
             // 
@@ -189,6 +196,7 @@
             this.button3.TabIndex = 19;
             this.button3.Text = "Brillo";
             this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button2
             // 
@@ -203,6 +211,7 @@
             this.button2.TabIndex = 17;
             this.button2.Text = "Ruido";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // pictureBox1
             // 
@@ -225,6 +234,7 @@
             this.button1.TabIndex = 15;
             this.button1.Text = "Warp";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // label1
             // 
@@ -251,53 +261,54 @@
             this.button6.TabIndex = 21;
             this.button6.Text = "Termico";
             this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // chart1
             // 
-            chartArea4.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea4);
-            legend4.Name = "Legend1";
-            this.chart1.Legends.Add(legend4);
+            chartArea43.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea43);
+            legend43.Name = "Legend1";
+            this.chart1.Legends.Add(legend43);
             this.chart1.Location = new System.Drawing.Point(12, 12);
             this.chart1.Name = "chart1";
-            series4.ChartArea = "ChartArea1";
-            series4.Legend = "Legend1";
-            series4.Name = "Series1";
-            this.chart1.Series.Add(series4);
+            series43.ChartArea = "ChartArea1";
+            series43.Legend = "Legend1";
+            series43.Name = "Series1";
+            this.chart1.Series.Add(series43);
             this.chart1.Size = new System.Drawing.Size(300, 114);
             this.chart1.TabIndex = 28;
             this.chart1.Text = "chart1";
             // 
             // chart2
             // 
-            chartArea5.Name = "ChartArea1";
-            this.chart2.ChartAreas.Add(chartArea5);
-            legend5.Name = "Legend1";
-            this.chart2.Legends.Add(legend5);
+            chartArea44.Name = "ChartArea1";
+            this.chart2.ChartAreas.Add(chartArea44);
+            legend44.Name = "Legend1";
+            this.chart2.Legends.Add(legend44);
             this.chart2.Location = new System.Drawing.Point(12, 132);
             this.chart2.Name = "chart2";
             this.chart2.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Bright;
-            series5.ChartArea = "ChartArea1";
-            series5.Legend = "Legend1";
-            series5.Name = "Series2";
-            this.chart2.Series.Add(series5);
+            series44.ChartArea = "ChartArea1";
+            series44.Legend = "Legend1";
+            series44.Name = "Series2";
+            this.chart2.Series.Add(series44);
             this.chart2.Size = new System.Drawing.Size(300, 114);
             this.chart2.TabIndex = 29;
             this.chart2.Text = "chart2";
             // 
             // chart3
             // 
-            chartArea6.Name = "ChartArea1";
-            this.chart3.ChartAreas.Add(chartArea6);
-            legend6.Name = "Legend1";
-            this.chart3.Legends.Add(legend6);
+            chartArea45.Name = "ChartArea1";
+            this.chart3.ChartAreas.Add(chartArea45);
+            legend45.Name = "Legend1";
+            this.chart3.Legends.Add(legend45);
             this.chart3.Location = new System.Drawing.Point(777, 55);
             this.chart3.Name = "chart3";
             this.chart3.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Chocolate;
-            series6.ChartArea = "ChartArea1";
-            series6.Legend = "Legend1";
-            series6.Name = "Series3";
-            this.chart3.Series.Add(series6);
+            series45.ChartArea = "ChartArea1";
+            series45.Legend = "Legend1";
+            series45.Name = "Series3";
+            this.chart3.Series.Add(series45);
             this.chart3.Size = new System.Drawing.Size(300, 114);
             this.chart3.TabIndex = 30;
             this.chart3.Text = "chart3";
@@ -315,6 +326,7 @@
             this.BTN_Parar.TabIndex = 31;
             this.BTN_Parar.Text = "Parar";
             this.BTN_Parar.UseVisualStyleBackColor = true;
+            this.BTN_Parar.Click += new System.EventHandler(this.BTN_Parar_Click);
             // 
             // BTN_Continuar
             // 
@@ -329,6 +341,7 @@
             this.BTN_Continuar.TabIndex = 32;
             this.BTN_Continuar.Text = "Continuar";
             this.BTN_Continuar.UseVisualStyleBackColor = true;
+            this.BTN_Continuar.Click += new System.EventHandler(this.BTN_Continuar_Click);
             // 
             // BTN_Retroceder
             // 
@@ -343,6 +356,7 @@
             this.BTN_Retroceder.TabIndex = 33;
             this.BTN_Retroceder.Text = "Retroceder";
             this.BTN_Retroceder.UseVisualStyleBackColor = true;
+            this.BTN_Retroceder.Click += new System.EventHandler(this.BTN_Retroceder_Click);
             // 
             // Form3
             // 
